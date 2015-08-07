@@ -15,6 +15,7 @@ Requirements:
 C++ compiler
 
 Usage:
+```c++
 #include "btree.h"
 
 // Create map for one integer to one double
@@ -35,3 +36,4 @@ if (it2.has_value()){
 // Save to disk
 ofstream of("mymap");
 mtm.serialize(of);
+```
