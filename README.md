@@ -1,14 +1,18 @@
 # btree
-B tree for effective integer array mapping designed for usage in natural language processing tools.
+B tree for effective integer array to value mapping.
+
+Designed for usage in natural language processing tools.
 
 C++ header only library designed for counting word n-grams
 
 Features:
 - suitlable for large number of items
-- integer key with runtime size
+- integer key
+- arbitrary value
+- key and value size is set at allocation
 - zero copy for keys and values
-- reduces memory fragmentation and small overhead
-- serialization and deserialization
+- reduces memory fragmentation and has small memory overhead
+- serialization and deserialization to disk
 
 
 Requirements:
