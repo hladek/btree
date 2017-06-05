@@ -9,6 +9,11 @@
 using namespace std;
 
 
+/**
+ * Node of a B-tree.
+ *
+ */
+
 class BtreeNode {
     public:
     vector<char> data;
@@ -52,24 +57,43 @@ class BtreeNode {
     virtual ~BtreeNode(){}
 };
 
+
+/**
+ * Iterator for B-tree
+ *
+ */
 class BtreeIterator {
     public:
     bool is_item;
     BtreeNode* node;
     //BtreeNode* node;
+    /**
+     * Position in current node
+     */
     int index;
     const size_t key_size;
 static const size_t max_node_size = 1024;
+    /**
+     * New iterator, Called by BtreeMap
+     * @arg node pointer
+     * @arg size of key
+     */
     BtreeIterator(BtreeNode* node,size_t key_size):
         key_size(key_size)
     {
         load(node);
      }
+    /**
+     * Copy constructor
+     */
     BtreeIterator(const BtreeIterator& other) : key_size(other.key_size){
         node = other.node;
         index = other.index;
         is_item = other.is_item; 
     }
+    /**
+     * Assignment operator
+     */
     BtreeIterator& operator=(const BtreeIterator& other){
         assert(&other != this);
         assert(other.key_size == key_size);
@@ -78,8 +102,11 @@ static const size_t max_node_size = 1024;
         is_item = other.is_item;
         return *this;
     }
-
-BtreeNode* child(){
+    
+    /**
+     * Pointer to current child node
+     */
+    BtreeNode* child(){
         BtreeNode* res = NULL;
         if (!node->is_leaf && !is_item){
             assert((index + BtreeNode::pointer_size) <= node->data.size());
@@ -87,8 +114,15 @@ BtreeNode* child(){
         }
         return res;
     }
-        
-    
+
+    /**
+     * Partial sorting function of key items
+     *
+     * Both keys are integer arrays.
+     *
+     * @arg first key
+     * @arg second key
+     */
     int key_lesser2(int* src,int* fkey) const{
         assert(src != fkey);
 		size_t i = 0;
@@ -99,6 +133,15 @@ BtreeNode* child(){
 		return fkey[i] - src[i];
 	}
 
+    /**
+     * Partial sorting function of key items.
+     *
+     * Compares current key with the given key
+     *
+     * Both keys are integer arrays.
+     *
+     * @arg given key
+     */
     int key_lesser(int* fkey) const{
         int* src = key();
         assert(src != fkey);
@@ -109,6 +152,10 @@ BtreeNode* child(){
         //cout <<  src[i] << " >>> " << fkey[i] - src[i] << endl;
 		return fkey[i] - src[i];
 	}
+
+    /**
+     * Go to the first item in current node
+     */
     void first(){
         assert(node->size() > 0);
         index = 0;
@@ -117,6 +164,11 @@ BtreeNode* child(){
         is_item =true;
         assert(index < (long)node->data.size());
     }
+
+    /**
+     * Go to the last item in the current node
+     *
+     */
     void last(){
         assert(node->size() > 0);
         index = 0;
@@ -126,6 +178,14 @@ BtreeNode* child(){
         is_item =true;
         assert(index < (long)node->data.size());
     }
+
+    /**
+     * Go to the middle item in the current node in the given range
+     *
+     * @arg lower boud
+     * @arg upper boud key array
+     *
+     */
     void mid(char* from_key,char* to_key){
         assert(node->size() > 2);
         assert(from_key < to_key);
@@ -137,6 +197,12 @@ BtreeNode* child(){
         index = fi + (dist/2) * node->isz(); 
         is_item = true;
     }
+
+    /**
+     * Searches a key in the current node.
+     *
+     * Iterator is placed on the found item or is last it item is not found in the current node
+     */
     // Non Recursive
     void find_in_node(int* fkey){
         if (node->size() == 0){
@@ -190,6 +256,16 @@ BtreeNode* child(){
             assert(is_item);
         }
     }
+
+    /**
+     * Search a key in current node and in each child node.
+     *
+     * Iterator is placed on the item if found.
+     *
+     * Iterator is last in the last node if item was not found.
+     *
+     * @arg key to search
+     */
     void find(int* fkey){
         find_in_node(fkey);
         if (child() != NULL){
@@ -202,6 +278,11 @@ BtreeNode* child(){
             find(fkey);
         }
     }
+    /**
+     * Go to the next position in  the current node.
+     *
+     * @return false if item is last
+     */
      bool next_position(){
         assert(node->data.size() > 0);
         if (is_item){
@@ -215,6 +296,11 @@ BtreeNode* child(){
             return false;
         return true;
     }
+     /**
+      * Go to the previous position in the current node.
+      *
+      * @return false, if current item is the first.
+      */
     bool previous_position(){
         assert(index >= 0);
         if (index < 0){
@@ -229,12 +315,22 @@ BtreeNode* child(){
         is_item = !is_item;
         return true;
     }
+
+    /**
+     * Move iteratot to the position before first position of the given node.
+     *
+     * @arg New current node
+     */
     void load(BtreeNode* parent){
         node = parent;
         is_item = true;
         index = -node->item_size;
     }
-
+    /**
+     * Mode iterator to the previous position in the tree.
+     *
+     * @return false, if the current position is before the first.
+     */
     bool prev(){
         assert(is_item);
         int* lk =  NULL;
@@ -267,7 +363,11 @@ BtreeNode* child(){
         }
         return false;
  }
-    
+   /**
+    * Moves iterator to the next position in the tree
+    *
+    * @return false, if the position is last
+    */
     bool next(){
         assert(is_item);
         if (node->size() == 0)
@@ -293,6 +393,9 @@ BtreeNode* child(){
         }
         return false;
     }
+    /**
+     * Prints current node as a string
+     */.
     void plot(){
         load(node);
         int i = 0;
@@ -319,19 +422,30 @@ BtreeNode* child(){
         }
         cout << endl;
     }
-    
+    /**
+     * Pointer to current key
+     */
     int* key() const{
         assert(is_item);
         assert(index >= 0);
         assert(index < (long)node->data.size());
         return (int*)(node->data.data() + index);
     }
+
+    /**
+     * Double Pointer to current valua
+     */
     double* double_value(){
         assert(is_item);
         assert(index >= 0);
         assert(index < (long)node->data.size());
         return (double*)(node->data.data() + index + key_size * sizeof(int));
     }
+    /**
+     * Splits current node amd rebalances tree.
+     *
+     * Iterator is positioned on new root of the tree.
+     */
     void split2(){
         if (node->data.size() <= max_node_size)
             return;
@@ -407,6 +521,10 @@ BtreeNode* child(){
         //plot();
         split2();
     }
+
+    /**
+     * Number of items in the tree. Root of the tree is current node.
+     */
     size_t size(){
         size_t res = node->size();
         if (res > 0){
@@ -420,6 +538,13 @@ BtreeNode* child(){
         }
         return res;
     }
+    /**
+     * Inserts new item. If new item is created, Value is initialized to zeros.
+     *
+     * Iterator is placed on a newly created item or on the existing item.
+     *
+     * @arg key to insert
+     */
     void insert(int* item){
         assert(!is_item);
         assert(child()== NULL);
@@ -454,15 +579,31 @@ BtreeNode* child(){
         // Na konci by mal byt iterator nastaveny na vkladany prvok
        
     }
-
+    /**
+     * @return true if it is leaf item.
+     */
     bool has_value(){
         return is_item;
     }
 };
+
+/**
+ * A B-tree implementation.
+ *
+ * A key is a pointer to an integer array of fixed size.
+ *
+ * A value is arbitrary sequence of bytes.
+ */
  class BtreeMap {
      public:
      BtreeNode root;
      const size_t key_size;
+     /**
+      * Constructs a new B-tree.
+      *
+      * @arg size of key in bytes
+      * @arg size of value in bytes
+      */
      BtreeMap(size_t key_size,size_t value_size):
         root(value_size + key_size*sizeof(int)),
          key_size(key_size)
@@ -472,7 +613,10 @@ BtreeNode* child(){
      virtual ~BtreeMap(){
          root.delete_children();
      }
-
+    
+     /**
+      * Swaps contents with other B-tree. 
+      */
      void swap(BtreeMap& other){
          other.root.data.swap(root.data);
          assert(key_size == other.key_size);
@@ -480,13 +624,22 @@ BtreeNode* child(){
          other.root.is_leaf = root.is_leaf;
          root.is_leaf = isleaf;
      }
-
+    /**
+     * @return Instance of iterator for the current tree
+     */
      BtreeIterator iterator() const{
          return BtreeIterator((BtreeNode*)&root,key_size);
      }
     BtreeIterator iterator() {
          return BtreeIterator(&root,key_size);
      }
+
+    /**
+     * Inserts a new key with empty value to the tree.
+     *
+     * @arg pointer to integer array with key
+     * @return a pair, where the first member is true, if a new item was created. The second returned item is an iterator to the new item.
+     */
      pair<bool,BtreeIterator> insert(int* key){
          BtreeIterator it = iterator();
          it.find(key);
@@ -497,13 +650,20 @@ BtreeNode* child(){
          return make_pair(!r,it);
          
      }
-
+    
+     /**
+      * @arg poiter to the array with key
+      * @return iterator to the given key
+      */
      BtreeIterator find(int* key) const {
          BtreeIterator it = iterator();
          it.find(key);
          return it;
      }
-
+    /**
+     * @arg poiner to the array with key
+     * @return previous item to the given key
+     */
      BtreeIterator find_previous(int* key) const{
          BtreeIterator it = find(key);
          if (!it.is_item) {
@@ -520,12 +680,20 @@ BtreeNode* child(){
      }
 
 
-
+    
+     /**
+      * @return nummer of items in the tree.
+      */
      size_t size() const{
          BtreeIterator it = iterator();
          return it.size();
      }
 
+     /**
+      * Serializes tree to the given stream.
+      *
+      * @arg stream where to write
+      */
      void serialize(ostream& of){
          size_t sz = size();
          of.write((char*)&key_size,sizeof(size_t));
@@ -536,6 +704,14 @@ BtreeNode* child(){
              of.write((char*)it.key(),root.item_size);
          }
      }
+     /**
+      * Loads a tree from a stream.
+      *
+      * Behavior is undefined if tree already contains some items.
+      *
+      * @arg a stream with a serialized tree.
+      *
+      */
     void deserialize(istream& of){
          size_t sz = 0;
          of.read((char*)&key_size,sizeof(size_t));
