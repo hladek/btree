@@ -395,7 +395,7 @@ static const size_t max_node_size = 1024;
     }
     /**
      * Prints current node as a string
-     */.
+     */
     void plot(){
         load(node);
         int i = 0;
